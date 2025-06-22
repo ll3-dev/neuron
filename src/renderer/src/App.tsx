@@ -1,14 +1,25 @@
 import Editor from '@renderer/components/editor'
 import { Toaster } from './components/ui/sonner'
+import { SidebarInset, SidebarProvider } from '@renderer/components/ui/sidebar'
+import AppSidebar from '@renderer/components/sidebar'
+import TitleBar from '@renderer/components/titlebar'
 
 function App() {
   // const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
 
   return (
-    <div className="flex min-h-screen flex-col items-center gap-4 py-4 sm:px-5">
-      <Editor />
+    <SidebarProvider>
+      <TitleBar />
+      <AppSidebar />
+      <SidebarInset>
+        <main className="min-h-screen mx-auto w-full">
+          {/* for title padding */}
+          <div className="h-10 w-full bg-transparent" />
+          <Editor />
+        </main>
+      </SidebarInset>
       <Toaster />
-    </div>
+    </SidebarProvider>
   )
 }
 

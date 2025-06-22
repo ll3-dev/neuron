@@ -14,6 +14,12 @@ function createWindow(): void {
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
+    },
+    titleBarStyle: 'hidden',
+    ...(process.platform !== 'darwin' ? { titleBarOverlay: true } : {}),
+    trafficLightPosition: {
+      x: 12,
+      y: 12
     }
   })
 

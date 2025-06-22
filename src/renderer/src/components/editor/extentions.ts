@@ -21,6 +21,8 @@ import {
   Youtube
 } from 'novel'
 
+import AutoJoiner from 'tiptap-extension-auto-joiner'
+
 import { cx } from 'class-variance-authority'
 import { common, createLowlight } from 'lowlight'
 import { Markdown } from 'tiptap-markdown'
@@ -160,6 +162,10 @@ const markdownExtension = Markdown.configure({
   transformCopiedText: false
 })
 
+const globalDragHandle = GlobalDragHandle.configure({
+  scrollTreshold: 100
+})
+
 export const defaultExtensions = [
   starterKit,
   placeholder,
@@ -181,5 +187,6 @@ export const defaultExtensions = [
   TextStyle,
   Color,
   CustomKeymap,
-  GlobalDragHandle
+  globalDragHandle,
+  AutoJoiner
 ]
