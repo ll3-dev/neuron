@@ -18,8 +18,8 @@ function createWindow(): void {
     titleBarStyle: 'hidden',
     ...(process.platform !== 'darwin' ? { titleBarOverlay: true } : {}),
     trafficLightPosition: {
-      x: 12,
-      y: 12
+      x: 16,
+      y: 16
     }
   })
 

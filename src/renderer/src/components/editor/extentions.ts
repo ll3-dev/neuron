@@ -163,7 +163,7 @@ const markdownExtension = Markdown.configure({
 })
 
 const globalDragHandle = GlobalDragHandle.configure({
-  scrollTreshold: 100
+  scrollThreshold: 0
 })
 
 export const defaultExtensions = [

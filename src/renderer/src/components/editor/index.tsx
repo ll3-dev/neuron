@@ -7,12 +7,11 @@ import {
   type EditorInstance,
   EditorRoot,
   ImageResizer,
-  type JSONContent,
   handleCommandNavigation,
   handleImageDrop,
   handleImagePaste
 } from 'novel'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useDebounceCallback } from 'usehooks-ts'
 // import { ColorSelector } from './selectors/color-selector'
 // import { LinkSelector } from './selectors/link-selector'
@@ -29,11 +28,14 @@ import * as hljs from 'highlight.js'
 import { defaultEditorContent } from '@renderer/lib/content'
 
 import '@renderer/assets/prosemirror.css'
+import useNoteStore from '@renderer/store/useNoteStore'
+import EditorTitle from '@renderer/components/title/EditorTitle'
 
 const extensions = [...defaultExtensions, slashCommand]
 
 const Editor = () => {
-  const [initialContent, setInitialContent] = useState<null | JSONContent>(null)
+  const content = useNoteStore((state) => state.content)
+  const { setContent, titleFocus } = useNoteStore((state) => state.actions)
 
   // const [openNode, setOpenNode] = useState(false)
   // const [openColor, setOpenColor] = useState(false)
@@ -59,22 +61,27 @@ const Editor = () => {
 
   useEffect(() => {
     const content = window.localStorage.getItem('novel-content')
-    if (content) setInitialContent(JSON.parse(content))
-    else setInitialContent(defaultEditorContent)
-  }, [])
+    if (content) setContent(JSON.parse(content))
+    else setContent(defaultEditorContent)
+  }, [setContent])
 
-  if (!initialContent) return null
+  if (!content) return null
 
   return (
-    <div className="relative w-full px-12">
+    <div className="relative w-full">
       <EditorRoot>
         <EditorContent
-          initialContent={initialContent}
+          initialContent={content}
           extensions={extensions}
-          className="relative min-h-[500px] w-full mx-auto max-w-[1200px] border-muted bg-background sm:mb-[calc(20vh)] sm:rounded-lg"
+          className="relative border-muted bg-background sm:mb-[calc(20vh)] sm:rounded-lg"
           editorProps={{
             handleDOMEvents: {
-              keydown: (_view, event) => handleCommandNavigation(event)
+              keydown: (view, event) => {
+                handleCommandNavigation(event)
+                if (event.key === 'ArrowUp' && view.state.selection.from === 1) {
+                  titleFocus()
+                }
+              }
             },
             handlePaste: (view, event) => handleImagePaste(view, event, uploadFn),
             handleDrop: (view, event, _slice, moved) =>
@@ -82,14 +89,23 @@ const Editor = () => {
             attributes: {
               class:
                 'prose prose-lg dark:prose-invert prose-headings:font-title font-default focus:outline-none max-w-full'
-            }
+            },
+            scrollThreshold: 100,
+            scrollMargin: 100
           }}
           onUpdate={({ editor }) => {
+            const { selection } = editor.state
+            const viewportCoords = editor.view.coordsAtPos(selection.from)
+            const absoluteOffset = window.scrollY + viewportCoords.top
+
+            window.scrollTo(window.scrollX, absoluteOffset - 100)
+
             debouncedUpdates(editor)
           }}
           slotAfter={<ImageResizer />}
+          slotBefore={<EditorTitle />}
         >
-          <EditorCommand className="z-50 h-auto max-h-[330px] overflow-y-auto rounded-md border border-muted bg-background px-1 py-2 shadow-md transition-all">
+          <EditorCommand className="z-50 h-auto max-h-64  overflow-y-auto rounded-md border border-muted bg-background px-1 py-2 shadow-md transition-all">
             <EditorCommandEmpty className="px-2 text-muted-foreground">
               No results
             </EditorCommandEmpty>
