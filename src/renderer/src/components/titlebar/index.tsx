@@ -41,14 +41,17 @@ const TitleBar = () => {
       )}
     >
       <div
-        className="transition-all duration-200 ease-in-out"
         style={{
-          width: open ? `${width}` : `calc(var(--spacing) * 18)`
+          width: open ? `${width}` : undefined
         }}
       >
         <SidebarTrigger className="ml-20" />
       </div>
-      <div className={cn('px-5 transition-[padding] bg-background flex-1', { 'pl-12': !open })}>
+      <div
+        className={cn(
+          'px-5 transition-[padding] bg-background flex-1 w-full h-full flex items-center'
+        )}
+      >
         {title}
       </div>
     </div>

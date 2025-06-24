@@ -14,7 +14,7 @@ const EditorTitle = () => {
   return (
     <textarea
       ref={setTitleElement}
-      className="bg-transparent px-0 py-2 outline-none placeholder:text-neutral-400 text-4xl font-bold w-full resize-none overflow-hidden h-6"
+      className="bg-transparent px-0 py-2 outline-none placeholder:text-neutral-400 text-4xl font-bold w-full resize-none overflow-hidden"
       placeholder="새 노트"
       value={title}
       onChange={(e) => {
