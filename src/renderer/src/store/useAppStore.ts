@@ -7,8 +7,8 @@ interface AppState {
 interface AppAction {
   setHeaderVisibility: (isVisible: boolean) => void
   keyStore: {
-    getValye: (key: string) => Promise<string | null>
-    setValue: (key: string, value: string) => Promise<boolean>
+    getValue: (key: string) => Promise<string | null>
+    setValue: (key: string, value: string) => Promise<boolean | null>
   }
 }
 
@@ -17,9 +17,14 @@ export const useAppStore = create<AppState & { actions: AppAction }>((set) => ({
   actions: {
     setHeaderVisibility: (isVisible) => set({ isHeaderVisible: isVisible }),
     keyStore: {
-      getValye: async (key) => await window.electron.ipcRenderer.invoke('keyValueStore:get', key),
-      setValue: async (key, value) =>
-        await window.electron.ipcRenderer.invoke('keyValueStore:set', key, value)
+      getValue: async (key) => {
+        const { result } = await window.electron.ipcRenderer.invoke('keyValueStore:get', key)
+        return result || null
+      },
+      setValue: async (key, value) => {
+        const { result } = await window.electron.ipcRenderer.invoke('keyValueStore:set', key, value)
+        return result || null
+      }
     }
   }
 }))

@@ -1,17 +1,29 @@
 import { createFileRoute } from '@tanstack/react-router'
 import Editor from '@renderer/components/editor'
-import { SidebarInset, SidebarProvider } from '@renderer/components/ui/sidebar'
+import {
+  SIDEBAR_OPEN_COOKIE_NAME,
+  SIDEBAR_WIDTH_COOKIE_NAME,
+  SidebarInset,
+  SidebarProvider
+} from '@renderer/components/ui/sidebar'
 import AppSidebar from '@renderer/components/sidebar'
 import TitleBar from '@renderer/components/titlebar'
 import { Toaster } from '@renderer/components/ui/sonner'
 
 export const Route = createFileRoute('/')({
-  component: RouteComponent
+  component: MainPage,
+  loader: async () =>
+    Promise.all([
+      cookieStore.get(SIDEBAR_OPEN_COOKIE_NAME),
+      cookieStore.get(SIDEBAR_WIDTH_COOKIE_NAME)
+    ])
 })
 
-function RouteComponent() {
+function MainPage() {
+  const [defaultOpen, defaultWidth] = Route.useLoaderData()
+
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={defaultOpen?.value === 'true'} defaultWidth={defaultWidth?.value}>
       <TitleBar />
       <AppSidebar />
       <SidebarInset>

@@ -20,7 +20,8 @@ import { useIsMobile } from '@renderer/hooks/use-mobile'
 import { useSidebarResize } from '@renderer/hooks/useSidebarResize'
 import { cn } from '@renderer/lib/utils'
 
-const SIDEBAR_COOKIE_NAME = 'sidebar:state'
+export const SIDEBAR_OPEN_COOKIE_NAME = 'sidebar:state'
+export const SIDEBAR_WIDTH_COOKIE_NAME = 'sidebar:width'
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 const SIDEBAR_WIDTH_MOBILE = '18rem'
 const SIDEBAR_WIDTH_ICON = '3rem'
@@ -102,7 +103,7 @@ const SidebarProvider = React.forwardRef<
         }
 
         // This sets the cookie to keep the sidebar state.
-        document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+        document.cookie = `${SIDEBAR_OPEN_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
       },
       [setOpenProp, open]
     )
@@ -355,7 +356,7 @@ const SidebarRail = React.forwardRef<
     minResizeWidth: MIN_SIDEBAR_WIDTH,
     maxResizeWidth: MAX_SIDEBAR_WIDTH,
     setIsDraggingRail,
-    widthCookieName: 'sidebar:width',
+    widthCookieName: SIDEBAR_WIDTH_COOKIE_NAME,
     widthCookieMaxAge: 60 * 60 * 24 * 7 // 1 week
   })
 

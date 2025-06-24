@@ -5,9 +5,5 @@ export const Route = createRootRoute({
 })
 
 function RootComponent() {
-  return (
-    <>
-      <Outlet />
-    </>
-  )
+  return <Outlet />
 }
