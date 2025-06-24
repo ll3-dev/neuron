@@ -1,8 +1,10 @@
 import useNoteStore from '@renderer/store/useNoteStore'
 import { useEditor } from 'novel'
+import { useEffect } from 'react'
 
 const EditorTitle = () => {
   const title = useNoteStore((state) => state.title)
+  const titleElement = useNoteStore((state) => state.titleElement)
   const { setTitle, setTitleElement } = useNoteStore((state) => state.actions)
   const { editor } = useEditor()
 
@@ -10,6 +12,10 @@ const EditorTitle = () => {
     textarea.style.height = 'auto'
     textarea.style.height = `${textarea.scrollHeight}px`
   }
+
+  useEffect(() => {
+    titleElement?.focus()
+  }, [titleElement])
 
   return (
     <textarea
