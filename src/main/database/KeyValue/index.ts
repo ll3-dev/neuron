@@ -9,10 +9,13 @@ const findValuePrepared = appDb
   .prepare()
 
 export const getValue = async (key: string) => {
-  return findValuePrepared.get({ key }).catch((error) => {
-    console.error(`Error fetching value for key "${key}":`, error)
-    return null
-  })
+  return findValuePrepared
+    .get({ key })
+    .then((result) => result?.value)
+    .catch((error) => {
+      console.error(`Error fetching value for key "${key}":`, error)
+      return null
+    })
 }
 
 export const setValue = async (key: string, value: string) => {
@@ -41,4 +44,17 @@ export const setValue = async (key: string, value: string) => {
       })
     return rowsAffected === 1
   }
+}
+
+export const deleteValue = async (key: string) => {
+  console.log(`Deleting value for key "${key}"`)
+  const { rowsAffected } = await appDb
+    .delete(keyValue)
+    .where(eq(keyValue.key, key))
+    .execute()
+    .catch((error) => {
+      console.error(`Error deleting value for key "${key}":`, error)
+      return { rowsAffected: 0 }
+    })
+  return rowsAffected === 1
 }
