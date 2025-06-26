@@ -11,7 +11,10 @@ export const Route = createFileRoute('/welcome')({
 
 function RouteComponent() {
   const navigate = useNavigate()
-  const { selectMainFolder, keyStore } = useAppStore((state) => state.actions)
+  const {
+    folder: { selectMainFolder },
+    keyValueStore
+  } = useAppStore((state) => state.actions)
   const [selectedFolder, setSelectedFolder] = useState('')
 
   const onSelectFolder = async () => {
@@ -26,7 +29,7 @@ function RouteComponent() {
   }
 
   const onGotoMain = async () => {
-    const result = await keyStore.setValue(DEFAULT_DIRECTORY_KEY, selectedFolder)
+    const result = await keyValueStore.setValue(DEFAULT_DIRECTORY_KEY, selectedFolder)
     if (result) {
       navigate({ to: '/' })
     }

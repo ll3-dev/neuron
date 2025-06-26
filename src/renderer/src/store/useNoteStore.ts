@@ -3,13 +3,15 @@ import { create } from 'zustand'
 
 interface NoteState {
   title: string
-  content: JSONContent | null
+  content: JSONContent | HTMLContent | JSONContent[] | null
   titleElement: HTMLTextAreaElement | null
 }
 
+type HTMLContent = string
+
 interface NoteAction {
   setTitle: (title: string) => void
-  setContent: (content: JSONContent) => void
+  setContent: (content: JSONContent | HTMLContent | JSONContent[]) => void
   setTitleElement: (element: HTMLTextAreaElement | null) => void
   titleFocus: () => void
 }
@@ -19,8 +21,8 @@ const useNoteStore = create<NoteState & { actions: NoteAction }>((set) => ({
   content: null,
   titleElement: null,
   actions: {
-    setTitle: (title: string) => set((state) => ({ ...state, title })),
-    setContent: (content: JSONContent) => set((state) => ({ ...state, content })),
+    setTitle: (title) => set((state) => ({ ...state, title })),
+    setContent: (content) => set((state) => ({ ...state, content })),
     setTitleElement: (element: HTMLTextAreaElement | null) =>
       set((state) => ({ ...state, titleElement: element })),
     titleFocus: () =>

@@ -16,7 +16,7 @@ export const Route = createFileRoute('/')({
   component: MainPage,
   beforeLoad: async ({ cause }) => {
     if (cause === 'enter') {
-      const keyStore = useAppStore.getState().actions.keyStore
+      const keyStore = useAppStore.getState().actions.keyValueStore
       const directory = await keyStore.getValue(DEFAULT_DIRECTORY_KEY)
 
       if (!directory) {

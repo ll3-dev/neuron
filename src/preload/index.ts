@@ -1,8 +1,21 @@
-import { contextBridge } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import { ipcApiSpec, IElectronAPI } from '../shared/ipc'
 
-// Custom APIs for renderer
-const api = {}
+const api = Object.entries(ipcApiSpec).reduce((acc, [namespace, methods]) => {
+  // @ts-ignore only used in preload
+  acc[namespace as keyof IElectronAPI] = {}
+
+  Object.keys(methods).forEach((methodName) => {
+    const channel = `${namespace}:${methodName}`
+    // @ts-ignore only used in preload
+    acc[namespace as keyof IElectronAPI][methodName as keyof typeof methods] = (
+      ...args: unknown[]
+    ) => ipcRenderer.invoke(channel, ...args)
+  })
+
+  return acc
+}, {} as IElectronAPI)
 
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise

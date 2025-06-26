@@ -7,25 +7,16 @@ import {
   type EditorInstance,
   EditorRoot,
   ImageResizer,
+  JSONContent,
   handleCommandNavigation,
   handleImageDrop,
   handleImagePaste
 } from 'novel'
 import { useEffect } from 'react'
 import { useDebounceCallback } from 'usehooks-ts'
-// import { ColorSelector } from './selectors/color-selector'
-// import { LinkSelector } from './selectors/link-selector'
-// import { MathSelector } from './selectors/math-selector'
-// import { NodeSelector } from './selectors/node-selector'
-// import { Separator } from './ui/separator'
-
-// import GenerativeMenuSwitch from './generative/generative-menu-switch'
 import { uploadFn } from './imageUpload'
-// import { TextButtons } from './selectors/text-buttons'
 import { slashCommand, suggestionItems } from './slash-command'
 import { defaultExtensions } from './extentions'
-import * as hljs from 'highlight.js'
-import { defaultEditorContent } from '@renderer/lib/content'
 
 import '@renderer/assets/prosemirror.css'
 import useNoteStore from '@renderer/store/useNoteStore'
@@ -37,32 +28,17 @@ const Editor = () => {
   const content = useNoteStore((state) => state.content)
   const { setContent, titleFocus } = useNoteStore((state) => state.actions)
 
-  // const [openNode, setOpenNode] = useState(false)
-  // const [openColor, setOpenColor] = useState(false)
-  // const [openLink, setOpenLink] = useState(false)
-  // const [openAI, setOpenAI] = useState(false)
-
-  const highlightCodeblocks = (content: string) => {
-    const doc = new DOMParser().parseFromString(content, 'text/html')
-    doc.querySelectorAll('pre code').forEach((el) => {
-      // @ts-ignore hljs have not types
-      // https://highlightjs.readthedocs.io/en/latest/api.html?highlight=highlightElement#highlightelement
-      hljs.highlightElement(el)
-    })
-    return new XMLSerializer().serializeToString(doc)
-  }
-
-  const debouncedUpdates = useDebounceCallback(async (editor: EditorInstance) => {
-    const json = editor.getJSON()
-    window.localStorage.setItem('html-content', highlightCodeblocks(editor.getHTML()))
-    window.localStorage.setItem('novel-content', JSON.stringify(json))
+  const debouncedUpdates = useDebounceCallback((editor: EditorInstance) => {
     window.localStorage.setItem('markdown', editor.storage.markdown.getMarkdown())
   }, 500)
 
   useEffect(() => {
-    const content = window.localStorage.getItem('novel-content')
-    if (content) setContent(JSON.parse(content))
-    else setContent(defaultEditorContent)
+    const content = window.localStorage.getItem('markdown')
+    try {
+      setContent(content ?? '')
+    } catch (error) {
+      console.error('Error parsing markdown content:', error)
+    }
   }, [setContent])
 
   if (!content) return null
@@ -71,7 +47,7 @@ const Editor = () => {
     <div className="relative w-full">
       <EditorRoot>
         <EditorContent
-          initialContent={content}
+          initialContent={content as JSONContent}
           extensions={extensions}
           className="relative border-muted bg-background sm:mb-[calc(20vh)] sm:rounded-lg"
           editorProps={{
@@ -128,20 +104,6 @@ const Editor = () => {
               ))}
             </EditorCommandList>
           </EditorCommand>
-
-          {/* <GenerativeMenuSwitch open={openAI} onOpenChange={setOpenAI}> */}
-          {/*   <Separator orientation="vertical" /> */}
-          {/*   <NodeSelector open={openNode} onOpenChange={setOpenNode} /> */}
-          {/*   <Separator orientation="vertical" /> */}
-          {/**/}
-          {/*   <LinkSelector open={openLink} onOpenChange={setOpenLink} /> */}
-          {/*   <Separator orientation="vertical" /> */}
-          {/*   <MathSelector /> */}
-          {/*   <Separator orientation="vertical" /> */}
-          {/*   <TextButtons /> */}
-          {/*   <Separator orientation="vertical" /> */}
-          {/*   <ColorSelector open={openColor} onOpenChange={setOpenColor} /> */}
-          {/* </GenerativeMenuSwitch> */}
         </EditorContent>
       </EditorRoot>
     </div>
