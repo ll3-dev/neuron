@@ -1,6 +1,6 @@
 import WelcomeTitlebar from '@renderer/components/titlebar/welcome'
 import { Button } from '@renderer/components/ui/button'
-import { DEFAULT_DIRECTORY_KEY } from '@renderer/constats/app'
+import { DEFAULT_FOLDER_KEY } from '@renderer/constats/app'
 import { useAppStore } from '@renderer/store/useAppStore'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
@@ -29,7 +29,7 @@ function RouteComponent() {
   }
 
   const onGotoMain = async () => {
-    const result = await keyValueStore.setValue(DEFAULT_DIRECTORY_KEY, selectedFolder)
+    const result = await keyValueStore.setValue(DEFAULT_FOLDER_KEY, selectedFolder)
     if (result) {
       navigate({ to: '/' })
     }

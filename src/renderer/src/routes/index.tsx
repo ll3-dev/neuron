@@ -10,14 +10,14 @@ import AppSidebar from '@renderer/components/sidebar'
 import TitleBar from '@renderer/components/titlebar'
 import { Toaster } from '@renderer/components/ui/sonner'
 import { useAppStore } from '@renderer/store/useAppStore'
-import { DEFAULT_DIRECTORY_KEY } from '@renderer/constats/app'
+import { DEFAULT_FOLDER_KEY } from '@renderer/constats/app'
 
 export const Route = createFileRoute('/')({
   component: MainPage,
   beforeLoad: async ({ cause }) => {
     if (cause === 'enter') {
       const keyStore = useAppStore.getState().actions.keyValueStore
-      const directory = await keyStore.getValue(DEFAULT_DIRECTORY_KEY)
+      const directory = await keyStore.getValue(DEFAULT_FOLDER_KEY)
 
       if (!directory) {
         throw redirect({

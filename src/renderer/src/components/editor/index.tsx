@@ -41,8 +41,6 @@ const Editor = () => {
     }
   }, [setContent])
 
-  if (!content) return null
-
   return (
     <div className="relative w-full">
       <EditorRoot>
@@ -78,8 +76,8 @@ const Editor = () => {
 
             debouncedUpdates(editor)
           }}
-          slotAfter={<ImageResizer />}
           slotBefore={<EditorTitle />}
+          slotAfter={<ImageResizer />}
         >
           <EditorCommand className="z-50 h-auto max-h-64  overflow-y-auto rounded-md border border-muted bg-background px-1 py-2 shadow-md transition-all">
             <EditorCommandEmpty className="px-2 text-muted-foreground">

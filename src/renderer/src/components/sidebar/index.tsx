@@ -1,5 +1,3 @@
-import { Calendar, Home, Inbox, Search, Settings } from 'lucide-react'
-
 import {
   Sidebar,
   SidebarContent,
@@ -12,36 +10,32 @@ import {
   SidebarMenuItem,
   SidebarRail
 } from '@renderer/components/ui/sidebar'
+import { useDirectoryItemsMutate, useMainFolderQuery } from '@renderer/hooks/query/useFolder'
+import { useEffect, useState } from 'react'
 
-const items = [
-  {
-    title: 'Home',
-    url: '#',
-    icon: Home
-  },
-  {
-    title: 'Inbox',
-    url: '#',
-    icon: Inbox
-  },
-  {
-    title: 'Calendar',
-    url: '#',
-    icon: Calendar
-  },
-  {
-    title: 'Search',
-    url: '#',
-    icon: Search
-  },
-  {
-    title: 'Settings',
-    url: '#',
-    icon: Settings
-  }
-]
+type DirectoryItems = Awaited<ReturnType<typeof window.api.folder.folderItems>>
 
 function AppSidebar() {
+  const { data: mainFolder } = useMainFolderQuery()
+  const { mutate: getDirectoryItems } = useDirectoryItemsMutate()
+  const [directoryItems, setDirectoryItems] = useState<DirectoryItems | null>(null)
+
+  useEffect(() => {
+    if (mainFolder) {
+      getDirectoryItems(mainFolder, {
+        onSuccess: (items) => {
+          setDirectoryItems(items ?? [])
+        }
+      })
+    }
+  }, [mainFolder, getDirectoryItems])
+
+  if (!mainFolder || !directoryItems) {
+    return null
+  }
+
+  const directoryName = mainFolder.split('/').at(-1) || '홈'
+
   return (
     <Sidebar>
       <SidebarHeader>
@@ -49,16 +43,13 @@ function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Application</SidebarGroupLabel>
+          <SidebarGroupLabel>{directoryName}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
+              {directoryItems.map(({ name }) => (
+                <SidebarMenuItem key={name}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </a>
+                    <span>{name}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
