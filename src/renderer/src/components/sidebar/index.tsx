@@ -1,3 +1,5 @@
+import { File, FileText, Home, Menu } from 'lucide-react'
+
 import {
   Sidebar,
   SidebarContent,
@@ -12,6 +14,7 @@ import {
 } from '@renderer/components/ui/sidebar'
 import { useDirectoryItemsMutate, useMainFolderQuery } from '@renderer/hooks/query/useFolder'
 import { useEffect, useState } from 'react'
+import { useAppStore } from '@renderer/store/useAppStore'
 
 type DirectoryItems = Awaited<ReturnType<typeof window.api.folder.folderItems>>
 
@@ -19,13 +22,12 @@ function AppSidebar() {
   const { data: mainFolder } = useMainFolderQuery()
   const { mutate: getDirectoryItems } = useDirectoryItemsMutate()
   const [directoryItems, setDirectoryItems] = useState<DirectoryItems | null>(null)
+  const { setSelectedTab } = useAppStore((state) => state.actions)
 
   useEffect(() => {
     if (mainFolder) {
       getDirectoryItems(mainFolder, {
-        onSuccess: (items) => {
-          setDirectoryItems(items ?? [])
-        }
+        onSuccess: (items) => setDirectoryItems(items ?? [])
       })
     }
   }, [mainFolder, getDirectoryItems])
@@ -43,12 +45,15 @@ function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>{directoryName}</SidebarGroupLabel>
+          <SidebarGroupLabel>
+            <span>{directoryName}</span>
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {directoryItems.map(({ name }) => (
+              {directoryItems.map(({ name, absolutePath }) => (
                 <SidebarMenuItem key={name}>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton onClick={() => setSelectedTab(absolutePath)}>
+                    <FileText />
                     <span>{name}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

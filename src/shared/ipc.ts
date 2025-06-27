@@ -1,16 +1,31 @@
 import { ipcMain } from 'electron'
 import { deleteValue, getValue, setValue } from '../main/database/KeyValue'
-import { folderItems, selectMainFolder } from '../main/actions/files'
+import {
+  changeFileName,
+  deleteFile,
+  deleteFolder,
+  folderItems,
+  isExistFileOrFolder,
+  readFileContent,
+  saveFile,
+  selectMainFolder
+} from '../main/actions/files'
 
 export const ipcApiSpec = {
   keyValueStore: {
-    getValue: getValue,
-    setValue: setValue,
-    deleteValue: deleteValue
+    getValue,
+    setValue,
+    deleteValue
   },
   folder: {
-    selectMainFolder: selectMainFolder,
-    folderItems: folderItems
+    selectMainFolder,
+    folderItems,
+    saveFile,
+    readFileContent,
+    deleteFile,
+    deleteFolder,
+    isExistFileOrFolder,
+    changeFileName
   }
 }
 
