@@ -1,12 +1,12 @@
 import { SidebarTrigger, useSidebar } from '@renderer/components/ui/sidebar'
+import { getFileName } from '@renderer/lib/file'
 import { cn } from '@renderer/lib/utils'
 import { useAppStore } from '@renderer/store/useAppStore'
-import useNoteStore from '@renderer/store/useNoteStore'
 import { useCallback, useEffect } from 'react'
 
 const TitleBar = () => {
   const { open, width } = useSidebar()
-  const title = useNoteStore((state) => state.title)
+  const selectedTab = useAppStore((state) => state.selectedTab)
   const isHeaderVisible = useAppStore((state) => state.isHeaderVisible)
   const { setHeaderVisibility } = useAppStore((state) => state.actions)
 
@@ -52,7 +52,7 @@ const TitleBar = () => {
           'px-5 transition-[padding] bg-background flex-1 w-full h-full flex items-center'
         )}
       >
-        {title}
+        {getFileName(selectedTab)}
       </div>
     </div>
   )

@@ -26,7 +26,7 @@ function RouteComponent() {
   const onGotoMain = async () => {
     const result = await window.api.keyValueStore.setValue(DEFAULT_FOLDER_KEY, selectedFolder)
     if (result) {
-      navigate({ to: '/' })
+      navigate({ to: '/editor' })
     }
   }
 

@@ -8,8 +8,8 @@ export const selectMainFolder = () =>
 
 export const folderItems = (folderPath: string) =>
   readdir(folderPath, { withFileTypes: true })
-    .then((items) => {
-      const isFileExist = Promise.all(items.map((item) => stat(`${folderPath}/${item.name}`)))
+    .then(async (items) => {
+      const isFileExist = await Promise.all(items.map((item) => stat(`${folderPath}/${item.name}`)))
 
       return (
         items.map((item, index) => ({

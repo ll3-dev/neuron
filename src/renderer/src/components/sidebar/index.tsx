@@ -1,5 +1,3 @@
-import { File, FileText, Home, Menu } from 'lucide-react'
-
 import {
   Sidebar,
   SidebarContent,
@@ -8,31 +6,17 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarRail
 } from '@renderer/components/ui/sidebar'
-import { useDirectoryItemsMutate, useMainFolderQuery } from '@renderer/hooks/query/useFolder'
-import { useEffect, useState } from 'react'
-import { useAppStore } from '@renderer/store/useAppStore'
-
-type DirectoryItems = Awaited<ReturnType<typeof window.api.folder.folderItems>>
+import SidebarItmes from '@renderer/components/sidebar/SidebarItems'
+import { useFolderItemsQuery, useMainFolderQuery } from '@renderer/hooks/query/useFolder'
+import { filterFilesSidebar, Tfile } from '@renderer/lib/file'
 
 function AppSidebar() {
   const { data: mainFolder } = useMainFolderQuery()
-  const { mutate: getDirectoryItems } = useDirectoryItemsMutate()
-  const [directoryItems, setDirectoryItems] = useState<DirectoryItems | null>(null)
-  const { setSelectedTab } = useAppStore((state) => state.actions)
+  const { data: folderItems } = useFolderItemsQuery(mainFolder ?? '', !!mainFolder)
 
-  useEffect(() => {
-    if (mainFolder) {
-      getDirectoryItems(mainFolder, {
-        onSuccess: (items) => setDirectoryItems(items ?? [])
-      })
-    }
-  }, [mainFolder, getDirectoryItems])
-
-  if (!mainFolder || !directoryItems) {
+  if (!mainFolder || folderItems === undefined) {
     return null
   }
 
@@ -50,13 +34,8 @@ function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {directoryItems.map(({ name, absolutePath }) => (
-                <SidebarMenuItem key={name}>
-                  <SidebarMenuButton onClick={() => setSelectedTab(absolutePath)}>
-                    <FileText />
-                    <span>{name}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+              {filterFilesSidebar(folderItems).map((file: Tfile) => (
+                <SidebarItmes key={file.name} file={file} />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
