@@ -12,40 +12,36 @@ import {
   handleImageDrop,
   handleImagePaste
 } from 'novel'
-import { useEffect } from 'react'
-import { useDebounceCallback } from 'usehooks-ts'
 import { uploadFn } from './imageUpload'
 import { slashCommand, suggestionItems } from './slash-command'
 import { defaultExtensions } from './extentions'
 
 import '@renderer/assets/prosemirror.css'
 import useNoteStore from '@renderer/store/useNoteStore'
-import EditorTitle from '@renderer/components/title/EditorTitle'
+import { useAppStore } from '@renderer/store/useAppStore'
+import { useFileContentQuery } from '@renderer/hooks/query/useFolder'
+import { useSearch } from '@tanstack/react-router'
+import { useDebounce } from '@toss/react'
 
 const extensions = [...defaultExtensions, slashCommand]
 
 const Editor = () => {
-  const content = useNoteStore((state) => state.content)
-  const { setContent, titleFocus } = useNoteStore((state) => state.actions)
+  const { absolutePath } = useSearch({ from: '/editor' })
+  const { titleFocus } = useNoteStore((state) => state.actions)
+  const selectedTab = useAppStore((state) => state.selectedTab)
+  const { data: content } = useFileContentQuery(absolutePath)
 
-  const debouncedUpdates = useDebounceCallback((editor: EditorInstance) => {
-    window.localStorage.setItem('markdown', editor.storage.markdown.getMarkdown())
+  const debouncedUpdates = useDebounce((editor: EditorInstance) => {
+    console.log(selectedTab)
+    if (!absolutePath || !editor.storage.markdown) return
+    window.api.folder.saveFile(absolutePath, editor.storage.markdown.getMarkdown())
   }, 500)
-
-  useEffect(() => {
-    const content = window.localStorage.getItem('markdown')
-    try {
-      setContent(content ?? '')
-    } catch (error) {
-      console.error('Error parsing markdown content:', error)
-    }
-  }, [setContent])
 
   return (
     <div className="relative w-full">
       <EditorRoot>
         <EditorContent
-          initialContent={content as JSONContent}
+          initialContent={content as unknown as JSONContent}
           extensions={extensions}
           className="relative border-muted bg-background sm:mb-[calc(20vh)] sm:rounded-lg"
           editorProps={{
@@ -76,7 +72,6 @@ const Editor = () => {
 
             debouncedUpdates(editor)
           }}
-          slotBefore={<EditorTitle />}
           slotAfter={<ImageResizer />}
         >
           <EditorCommand className="z-50 h-auto max-h-64  overflow-y-auto rounded-md border border-muted bg-background px-1 py-2 shadow-md transition-all">

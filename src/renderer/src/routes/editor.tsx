@@ -10,9 +10,17 @@ import AppSidebar from '@renderer/components/sidebar'
 import TitleBar from '@renderer/components/titlebar'
 import { Toaster } from '@renderer/components/ui/sonner'
 import { DEFAULT_FOLDER_KEY } from '@renderer/constats/app'
+import { Suspense } from 'react'
+import EditorTitle from '@renderer/components/title/EditorTitle'
+import { z } from 'zod'
+
+const EditorSearhSchema = z.object({
+  absolutePath: z.string().optional()
+})
 
 export const Route = createFileRoute('/editor')({
   component: MainPage,
+  validateSearch: (search) => EditorSearhSchema.parse(search),
   beforeLoad: async ({ cause }) => {
     if (cause === 'enter') {
       const directory = await window.api.keyValueStore.getValue(DEFAULT_FOLDER_KEY)
@@ -34,6 +42,7 @@ export const Route = createFileRoute('/editor')({
 
 function MainPage() {
   const [defaultOpen, defaultWidth] = Route.useLoaderData()
+  const { absolutePath } = Route.useSearch()
 
   return (
     <SidebarProvider defaultOpen={defaultOpen?.value === 'true'} defaultWidth={defaultWidth?.value}>
@@ -44,7 +53,12 @@ function MainPage() {
           {/* for title padding */}
           <div className="h-13 w-full bg-transparent" />
           <div className="flex flex-col w-full mx-auto max-w-[1200px] p-32 pt-28 gap-4">
-            <Editor />
+            <Suspense>
+              <EditorTitle absolutePath={absolutePath} />
+            </Suspense>
+            <Suspense>
+              <Editor />
+            </Suspense>
           </div>
         </main>
       </SidebarInset>

@@ -19,3 +19,11 @@ export const filterFilesByExt = (files: Tfile[], exts: string[], folderEnable = 
   })
 
 export const filterFilesSidebar = (files: Tfile[]) => filterFilesByExt(files, ['md', 'mdx'], true)
+
+export const filePathJoin = (base: string, ...paths: string[]) => {
+  const normalizedBase = base.endsWith('/') ? base.slice(0, -1) : base
+  return paths.reduce((acc, path) => {
+    const normalizedPath = path.startsWith('/') ? path.slice(1) : path
+    return `${acc}/${normalizedPath}`
+  }, normalizedBase)
+}

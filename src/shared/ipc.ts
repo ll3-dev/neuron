@@ -4,6 +4,7 @@ import {
   changeFileName,
   deleteFile,
   deleteFolder,
+  fileStat,
   folderItems,
   isExistFileOrFolder,
   readFileContent,
@@ -25,7 +26,8 @@ export const ipcApiSpec = {
     deleteFile,
     deleteFolder,
     isExistFileOrFolder,
-    changeFileName
+    changeFileName,
+    fileStat
   }
 }
 

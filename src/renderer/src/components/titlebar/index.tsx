@@ -52,7 +52,7 @@ const TitleBar = () => {
           'px-5 transition-[padding] bg-background flex-1 w-full h-full flex items-center'
         )}
       >
-        {getFileName(selectedTab)}
+        {getFileName(selectedTab.name)}
       </div>
     </div>
   )

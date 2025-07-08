@@ -81,20 +81,14 @@ export const isExistFileOrFolder = async (filePath: string) => {
   const dirResult = readdir(filePath)
     .then(() => true)
     .catch((error) => {
-      if (error.code === 'ENOENT') {
-        return false
-      }
       console.error('Error checking existence of file or folder:', error)
-      throw error
+      return false
     })
   const fileResult = readFile(filePath)
     .then(() => true)
     .catch((error) => {
-      if (error.code === 'ENOENT') {
-        return false
-      }
       console.error('Error checking existence of file:', error)
-      throw error
+      return false
     })
 
   return Promise.all([dirResult, fileResult])
@@ -115,3 +109,18 @@ export const changeFileName = async (filePath: string, newName: string) => {
       throw error
     })
 }
+
+export const fileStat = async (filePath: string) =>
+  stat(filePath)
+    .then((stat) => ({
+      name: filePath.split('/').at(-1) || '',
+      absolutePath: filePath,
+      size: stat.size,
+      isFile: stat.isFile(),
+      isDirectory: stat.isDirectory(),
+      isSymbolicLink: stat.isSymbolicLink()
+    }))
+    .catch((error) => {
+      console.error('Error getting file stats:', error)
+      throw error
+    })

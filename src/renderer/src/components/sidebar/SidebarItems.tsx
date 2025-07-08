@@ -1,12 +1,14 @@
 import { ChevronRight, FileText } from 'lucide-react'
 import { SidebarMenuButton, SidebarMenuItem, SidebarMenuSub } from '../ui/sidebar'
-import { useAppStore } from '@renderer/store/useAppStore'
 import { useFolderItemsQuery } from '@renderer/hooks/query/useFolder'
 import { useReducer } from 'react'
 import { Collapsible, CollapsibleContent } from '../ui/collapsible'
-import { filterFilesSidebar, getFileName, Tfile } from '@renderer/lib/file'
+import { filePathJoin, filterFilesSidebar, getFileName, Tfile } from '@renderer/lib/file'
 import { Button } from '../ui/button'
 import { cn } from '@renderer/lib/utils'
+import useNoteStore from '@renderer/store/useNoteStore'
+import { useNavigate } from '@tanstack/react-router'
+import { useAppStore } from '@renderer/store/useAppStore'
 
 interface SidebarItemsProps {
   file: Tfile
@@ -14,10 +16,45 @@ interface SidebarItemsProps {
 
 const SidebarItems = ({ file }: SidebarItemsProps) => {
   const [isOpen, toggleOpen] = useReducer((state) => !state, false)
+  const { setContent } = useNoteStore((state) => state.actions)
   const { setSelectedTab } = useAppStore((state) => state.actions)
   const { data: folderItems } = useFolderItemsQuery(file.absolutePath, file.isDirectory && isOpen)
+  const navigate = useNavigate()
 
-  const mdAndFolerFiles = filterFilesSidebar(folderItems ?? [])
+  const onClickFileButton = async () => {
+    let selectedTab = file.absolutePath
+    let content: string | undefined = undefined
+    try {
+      if (file.isFile) {
+        content = await window.api.folder.readFileContent(file.absolutePath)
+      } else {
+        content = await window.api.folder.readFileContent(
+          filePathJoin(file.absolutePath, file.name + '.md')
+        )
+        selectedTab = filePathJoin(file.absolutePath, file.name + '.md')
+      }
+    } catch (error) {
+      if (content === undefined) {
+        console.warn('파일을 읽어올 수 없습니다:', file.absolutePath, error)
+        const absolutePath = filePathJoin(file.absolutePath, file.name + '.md')
+        await window.api.folder.saveFile(absolutePath, '')
+        selectedTab = absolutePath
+      }
+    } finally {
+      setSelectedTab(selectedTab)
+      setContent(content ?? '')
+      navigate({
+        to: '/editor',
+        replace: true,
+        search: { absolutePath: selectedTab }
+      })
+    }
+  }
+
+  const endFileName = file.name.split('/').at(-1) || ''
+  const mdAndFolerFiles = filterFilesSidebar(folderItems ?? []).filter(
+    (file) => file.name !== endFileName && file.isDirectory
+  )
 
   return (
     <SidebarMenuItem>
@@ -47,9 +84,7 @@ const SidebarItems = ({ file }: SidebarItemsProps) => {
             />
           </Button>
           <SidebarMenuButton
-            onClick={() => {
-              setSelectedTab(file.absolutePath)
-            }}
+            onClick={onClickFileButton}
             className="truncate pl-10 pr-2 hover:bg-accent hover:text-accent-foreground flex items-center"
           >
             <span>{getFileName(file.name)}</span>

@@ -1,20 +1,36 @@
 import { create } from 'zustand'
 
-interface AppState {
-  isHeaderVisible: boolean
-  selectedTab: string
+type SelectedTab = {
+  absolutePath: string
+  name: string
+  isFile: boolean
+  isDirectory: boolean
 }
 
+interface AppState {
+  isHeaderVisible: boolean
+  selectedTab: SelectedTab
+}
 interface AppAction {
   setHeaderVisibility: (isVisible: boolean) => void
-  setSelectedTab: (tab: string) => void
+  setSelectedTab: (absolutePath: string) => void
 }
 
 export const useAppStore = create<AppState & { actions: AppAction }>((set) => ({
   isHeaderVisible: true,
-  selectedTab: '',
+  selectedTab: { absolutePath: '', name: '', isFile: false, isDirectory: false },
   actions: {
     setHeaderVisibility: (isVisible) => set({ isHeaderVisible: isVisible }),
-    setSelectedTab: (tab) => set({ selectedTab: tab })
+    setSelectedTab: async (absolutePath) => {
+      const fileInfo = await window.api.folder.fileStat(absolutePath)
+      set({
+        selectedTab: {
+          absolutePath: absolutePath,
+          name: fileInfo.name,
+          isFile: fileInfo.isFile,
+          isDirectory: fileInfo.isDirectory
+        }
+      })
+    }
   }
 }))

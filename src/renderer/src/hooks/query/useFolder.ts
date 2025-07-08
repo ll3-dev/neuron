@@ -1,4 +1,4 @@
-import { DEFAULT_FOLDER_KEY, FOLDER_ITEMS_KEY } from '@renderer/constats/app'
+import { DEFAULT_FOLDER_KEY, FOLDER_ITEMS_KEY, FILE_CONTENT_KEY } from '@renderer/constats/app'
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
 
 export const useMainFolderQuery = () =>
@@ -14,4 +14,12 @@ export const useFolderItemsQuery = (absoluteFolderPath: string, enabled = false)
       return window.api.folder.folderItems(absoluteFolderPath)
     },
     enabled
+  })
+
+export const useFileContentQuery = (absoluteFilePath?: string) =>
+  useSuspenseQuery({
+    queryKey: [FILE_CONTENT_KEY, absoluteFilePath],
+    queryFn: async () => {
+      return absoluteFilePath ? window.api.folder.readFileContent(absoluteFilePath) : undefined
+    }
   })
