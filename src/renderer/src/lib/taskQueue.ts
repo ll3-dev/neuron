@@ -30,4 +30,4 @@ class TaskQueue {
   }
 }
 
-export const fileNameChagneQueue = new TaskQueue()
+export const fileChangeQueue = new TaskQueue()

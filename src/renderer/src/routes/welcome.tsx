@@ -1,6 +1,7 @@
 import WelcomeTitlebar from '@renderer/components/titlebar/welcome'
 import { Button } from '@renderer/components/ui/button'
 import { DEFAULT_FOLDER_KEY } from '@renderer/constats/app'
+import { trpc } from '@renderer/lib/trpc'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 
@@ -11,27 +12,42 @@ export const Route = createFileRoute('/welcome')({
 function RouteComponent() {
   const navigate = useNavigate()
   const [selectedFolder, setSelectedFolder] = useState('')
+  const { mutate: selectMainFolder } = trpc.file.selectMainFolder.useMutation()
+  const { mutate: setValue } = trpc.keyValue.setValue.useMutation()
 
-  const onSelectFolder = async () => {
-    const folder = await window.api.folder.selectMainFolder()
-    if (folder?.canceled) {
-      return
-    }
-    if (folder?.filePaths.length) {
-      const mainFolder = folder.filePaths[0]
-      setSelectedFolder(mainFolder)
-    }
+  const onSelectFolder = () => {
+    selectMainFolder(undefined, {
+      onSuccess: (folder) => {
+        if (folder?.canceled) {
+          return
+        }
+        if (folder?.filePaths.length) {
+          const mainFolder = folder.filePaths[0]
+          setSelectedFolder(mainFolder)
+        }
+      }
+    })
   }
 
-  const onGotoMain = async () => {
-    const result = await window.api.keyValueStore.setValue(DEFAULT_FOLDER_KEY, selectedFolder)
-    if (result) {
-      navigate({
-        to: '/editor',
-        replace: true,
-        search: { absolutePath: selectedFolder }
-      })
-    }
+  const onGotoMain = () => {
+    setValue(
+      {
+        key: DEFAULT_FOLDER_KEY,
+        value: selectedFolder
+      },
+      {
+        onSuccess: () => {
+          navigate({
+            to: '/editor',
+            replace: true,
+            search: { absolutePath: selectedFolder }
+          })
+        },
+        onError: (error) => {
+          console.error('폴더 설정 실패:', error)
+        }
+      }
+    )
   }
 
   return (

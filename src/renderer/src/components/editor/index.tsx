@@ -18,23 +18,25 @@ import { defaultExtensions } from './extentions'
 
 import '@renderer/assets/prosemirror.css'
 import useNoteStore from '@renderer/store/useNoteStore'
-import { useAppStore } from '@renderer/store/useAppStore'
-import { useFileContentQuery } from '@renderer/hooks/query/useFolder'
-import { useSearch } from '@tanstack/react-router'
 import { useDebounce } from '@toss/react'
+import { trpc } from '@renderer/lib/trpc'
 
 const extensions = [...defaultExtensions, slashCommand]
 
 const Editor = () => {
-  const { absolutePath } = useSearch({ from: '/editor' })
+  const absolutePath = decodeURIComponent(
+    window.location.search.split('absolutePath=')[1]?.split('&')[0].replace(/\+/g, ' ')
+  )
   const { titleFocus } = useNoteStore((state) => state.actions)
-  const selectedTab = useAppStore((state) => state.selectedTab)
-  const { data: content } = useFileContentQuery(absolutePath)
+  const { data: content } = trpc.file.readFileContent.useQuery(
+    { absolutePath },
+    { enabled: absolutePath.length > 0 }
+  )
+  const { mutate: saveFile } = trpc.file.saveFile.useMutation()
 
   const debouncedUpdates = useDebounce((editor: EditorInstance) => {
-    console.log(selectedTab)
-    if (!absolutePath || !editor.storage.markdown) return
-    window.api.folder.saveFile(absolutePath, editor.storage.markdown.getMarkdown())
+    if (absolutePath.length > 0 || !editor.storage.markdown) return
+    saveFile({ absolutePath, content: editor.storage.markdown.getMarkdown() })
   }, 500)
 
   return (

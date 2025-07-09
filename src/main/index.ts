@@ -2,7 +2,8 @@ import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { registerIpcHandlers } from '../shared/ipc'
+import { createIPCHandler } from 'electron-trpc-experimental/main'
+import { appRouter } from './apis'
 
 function createWindow(): void {
   // Create the browser window.
@@ -40,6 +41,11 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
+  createIPCHandler({
+    router: appRouter,
+    windows: [mainWindow]
+  })
 }
 
 // This method will be called when Electron has finished
@@ -56,7 +62,6 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  registerIpcHandlers()
   createWindow()
 
   app.on('activate', function () {

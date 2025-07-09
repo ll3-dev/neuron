@@ -9,18 +9,32 @@ import {
   SidebarRail
 } from '@renderer/components/ui/sidebar'
 import SidebarItmes from '@renderer/components/sidebar/SidebarItems'
-import { useFolderItemsQuery, useMainFolderQuery } from '@renderer/hooks/query/useFolder'
 import { filterFilesSidebar, Tfile } from '@renderer/lib/file'
+import { trpc, trpcClient } from '@renderer/lib/trpc'
+import { DEFAULT_FOLDER_KEY } from '@renderer/constats/app'
+import { useEffect, useState } from 'react'
 
 function AppSidebar() {
-  const { data: mainFolder } = useMainFolderQuery()
-  const { data: folderItems } = useFolderItemsQuery(mainFolder ?? '', !!mainFolder)
+  const [mainFolder, setMainFolder] = useState('')
+  const { data: folderItems } = trpc.file.folderItems.useQuery(
+    { absolutePath: mainFolder },
+    { enabled: mainFolder !== '' }
+  )
+
+  useEffect(() => {
+    const initSidebar = async () => {
+      const mainFolder = await trpcClient.keyValue.getValue.mutate({ key: DEFAULT_FOLDER_KEY })
+      if (mainFolder) {
+        setMainFolder(mainFolder)
+      }
+    }
+
+    initSidebar()
+  }, [])
 
   if (!mainFolder || folderItems === undefined) {
     return null
   }
-
-  const directoryName = mainFolder.split('/').at(-1) || '홈'
 
   return (
     <Sidebar>
@@ -30,7 +44,7 @@ function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>
-            <span>{directoryName}</span>
+            <span>{mainFolder.split('/').at(-1)}</span>
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>

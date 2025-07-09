@@ -1,6 +1,5 @@
 import { ChevronRight, FileText } from 'lucide-react'
 import { SidebarMenuButton, SidebarMenuItem, SidebarMenuSub } from '../ui/sidebar'
-import { useFolderItemsQuery } from '@renderer/hooks/query/useFolder'
 import { useReducer } from 'react'
 import { Collapsible, CollapsibleContent } from '../ui/collapsible'
 import { filePathJoin, filterFilesSidebar, getFileName, Tfile } from '@renderer/lib/file'
@@ -9,6 +8,7 @@ import { cn } from '@renderer/lib/utils'
 import useNoteStore from '@renderer/store/useNoteStore'
 import { useNavigate } from '@tanstack/react-router'
 import { useAppStore } from '@renderer/store/useAppStore'
+import { trpc, trpcClient } from '@renderer/lib/trpc'
 
 interface SidebarItemsProps {
   file: Tfile
@@ -18,7 +18,12 @@ const SidebarItems = ({ file }: SidebarItemsProps) => {
   const [isOpen, toggleOpen] = useReducer((state) => !state, false)
   const { setContent } = useNoteStore((state) => state.actions)
   const { setSelectedTab } = useAppStore((state) => state.actions)
-  const { data: folderItems } = useFolderItemsQuery(file.absolutePath, file.isDirectory && isOpen)
+  const { data: folderItems } = trpc.file.folderItems.useQuery(
+    { absolutePath: file.absolutePath },
+    {
+      enabled: file.isDirectory && isOpen
+    }
+  )
   const navigate = useNavigate()
 
   const onClickFileButton = async () => {
@@ -26,18 +31,22 @@ const SidebarItems = ({ file }: SidebarItemsProps) => {
     let content: string | undefined = undefined
     try {
       if (file.isFile) {
-        content = await window.api.folder.readFileContent(file.absolutePath)
+        content = await trpcClient.file.readFileContent.query({ absolutePath: file.absolutePath })
       } else {
-        content = await window.api.folder.readFileContent(
-          filePathJoin(file.absolutePath, file.name + '.md')
-        )
+        const absolutePath = filePathJoin(file.absolutePath, file.name + '.md')
+        const fileExist = await trpcClient.file.isExist.query({ absolutePath })
+        if (!fileExist) {
+          console.warn('파일이 존재하지 않습니다. 새로운 파일을 생성합니다:', absolutePath)
+          await trpcClient.file.saveFile.mutate({ absolutePath, content: '' })
+        }
+        content = await trpcClient.file.readFileContent.query({ absolutePath })
         selectedTab = filePathJoin(file.absolutePath, file.name + '.md')
       }
     } catch (error) {
       if (content === undefined) {
         console.warn('파일을 읽어올 수 없습니다:', file.absolutePath, error)
         const absolutePath = filePathJoin(file.absolutePath, file.name + '.md')
-        await window.api.folder.saveFile(absolutePath, '')
+        await trpcClient.file.saveFile.mutate({ absolutePath, content: '' })
         selectedTab = absolutePath
       }
     } finally {

@@ -13,6 +13,7 @@ import { DEFAULT_FOLDER_KEY } from '@renderer/constats/app'
 import { Suspense } from 'react'
 import EditorTitle from '@renderer/components/title/EditorTitle'
 import { z } from 'zod'
+import { trpcClient } from '@renderer/lib/trpc'
 
 const EditorSearhSchema = z.object({
   absolutePath: z.string().optional()
@@ -23,9 +24,8 @@ export const Route = createFileRoute('/editor')({
   validateSearch: (search) => EditorSearhSchema.parse(search),
   beforeLoad: async ({ cause }) => {
     if (cause === 'enter') {
-      const directory = await window.api.keyValueStore.getValue(DEFAULT_FOLDER_KEY)
-
-      if (!directory) {
+      const folder = trpcClient.keyValue.getValue.mutate({ key: DEFAULT_FOLDER_KEY })
+      if (!folder) {
         throw redirect({
           to: '/welcome',
           replace: true
@@ -42,7 +42,6 @@ export const Route = createFileRoute('/editor')({
 
 function MainPage() {
   const [defaultOpen, defaultWidth] = Route.useLoaderData()
-  const { absolutePath } = Route.useSearch()
 
   return (
     <SidebarProvider defaultOpen={defaultOpen?.value === 'true'} defaultWidth={defaultWidth?.value}>
@@ -54,7 +53,7 @@ function MainPage() {
           <div className="h-13 w-full bg-transparent" />
           <div className="flex flex-col w-full mx-auto max-w-[1200px] p-32 pt-28 gap-4">
             <Suspense>
-              <EditorTitle absolutePath={absolutePath} />
+              <EditorTitle />
             </Suspense>
             <Suspense>
               <Editor />

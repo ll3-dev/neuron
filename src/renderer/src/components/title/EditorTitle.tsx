@@ -1,23 +1,20 @@
-import { FOLDER_ITEMS_KEY } from '@renderer/constats/app'
-import { getFileName } from '@renderer/lib/file'
-import { fileNameChagneQueue } from '@renderer/lib/taskQueue'
+import { DEFAULT_FOLDER_KEY } from '@renderer/constats/app'
+import { filePathJoin, getFileName } from '@renderer/lib/file'
+import { fileChangeQueue } from '@renderer/lib/taskQueue'
+import { trpc, trpcClient } from '@renderer/lib/trpc'
 import useNoteStore from '@renderer/store/useNoteStore'
-import { useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, useSearch } from '@tanstack/react-router'
 import { useThrottle } from '@toss/react'
 import { useEditor } from 'novel'
 import { ChangeEvent, useEffect, useState } from 'react'
 
-interface EditorTitleProps {
-  absolutePath?: string
-}
-
-const EditorTitle = ({ absolutePath }: EditorTitleProps) => {
+const EditorTitle = () => {
+  const { absolutePath } = useSearch({ from: '/editor' })
   const [title, setTitle] = useState('')
   const { setTitleElement } = useNoteStore((state) => state.actions)
   const { editor } = useEditor()
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
+  const util = trpc.useUtils()
 
   const autoResizeTextarea = (textarea: HTMLTextAreaElement) => {
     if (!textarea) return
@@ -25,30 +22,30 @@ const EditorTitle = ({ absolutePath }: EditorTitleProps) => {
     textarea.style.height = `${textarea.scrollHeight}px`
   }
 
-  const updateTitleToFile = useThrottle((newTitle: string) => {
+  const updateTitleToFile = useThrottle(async (newTitle: string) => {
     if (!absolutePath) return
-    fileNameChagneQueue.addTask(newTitle, () =>
-      window.api.folder
-        .changeFileName(absolutePath, newTitle + '.md')
-        .then((result) => {
-          if (!result) {
-            console.warn('파일 이름 변경 실패:', absolutePath, newTitle)
-            return null
-          }
-          navigate({
-            to: '/editor',
-            replace: true,
-            search: { absolutePath: result }
-          })
-          queryClient.invalidateQueries({
-            queryKey: [FOLDER_ITEMS_KEY, absolutePath.split('/').slice(0, -1).join('/')]
-          })
-          return result
-        })
-        .catch((error) => {
-          console.error('Error changing file name:', error)
-        })
-    )
+    const defaultFolder = await trpcClient.keyValue.getValue.mutate({ key: DEFAULT_FOLDER_KEY })
+    if (!defaultFolder) return
+    if (filePathJoin(defaultFolder, getFileName(defaultFolder), '.md') === absolutePath) return
+
+    fileChangeQueue.addTask(newTitle, async () => {
+      const changedFileAbsolutePath = await trpcClient.file.changeFileName.mutate({
+        absolutePath: absolutePath,
+        newName: newTitle + '.md'
+      })
+      if (!changedFileAbsolutePath) {
+        console.warn('파일 이름 변경 실패:', absolutePath, newTitle)
+        return
+      }
+      navigate({
+        to: '/editor',
+        replace: true,
+        search: { absolutePath: changedFileAbsolutePath }
+      })
+      util.file.folderItems.invalidate({
+        absolutePath: absolutePath.split('/').slice(0, -1).join('/')
+      })
+    })
   }, 500)
 
   const onTitleChange = async (e: ChangeEvent<HTMLTextAreaElement>) => {
@@ -61,9 +58,9 @@ const EditorTitle = ({ absolutePath }: EditorTitleProps) => {
       while (true) {
         fileName = '/새 노트' + (tryCount > 0 ? `(${tryCount})` : '')
         const newFileAbsolutePath = absolutePath.split('/').slice(0, -1).join('/') + fileName
-        const isExistNewNote = await window.api.folder.isExistFileOrFolder(
-          newFileAbsolutePath + '.md'
-        )
+        const isExistNewNote = await trpcClient.file.isExist.query({
+          absolutePath: newFileAbsolutePath + '.md'
+        })
         if (!isExistNewNote) {
           break
         }

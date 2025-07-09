@@ -1,4 +1,5 @@
 import { dialog } from 'electron'
+import { existsSync } from 'fs'
 import { readdir, writeFile, rm, readFile, stat, rename } from 'fs/promises'
 
 export const selectMainFolder = () =>
@@ -77,27 +78,7 @@ export const deleteFolder = (folderPath: string) =>
       throw error
     })
 
-export const isExistFileOrFolder = async (filePath: string) => {
-  const dirResult = readdir(filePath)
-    .then(() => true)
-    .catch((error) => {
-      console.error('Error checking existence of file or folder:', error)
-      return false
-    })
-  const fileResult = readFile(filePath)
-    .then(() => true)
-    .catch((error) => {
-      console.error('Error checking existence of file:', error)
-      return false
-    })
-
-  return Promise.all([dirResult, fileResult])
-    .then(([isDir, isFile]) => isDir || isFile)
-    .catch((error) => {
-      console.error('Error checking existence of file or folder:', error)
-      throw error
-    })
-}
+export const isExist = (filePath: string) => existsSync(filePath)
 
 export const changeFileName = async (filePath: string, newName: string) => {
   const newFilePath = filePath.replace(/[^/]+$/, newName)
