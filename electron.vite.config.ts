@@ -23,7 +23,7 @@ export default defineConfig({
         target: 'react',
         autoCodeSplitting: true,
         routesDirectory: resolve('src/renderer/src/routes'),
-        generatedRouteTree: resolve('src/renderer/src/routes/routeTree.ts')
+        generatedRouteTree: resolve('src/renderer/src/routeTree.gen.ts')
       }),
       react(),
       tailwindcss()
